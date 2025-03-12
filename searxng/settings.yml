@@ -34,12 +34,12 @@ brand:
 search:
   # Filter results. 0: None, 1: Moderate, 2: Strict
   safe_search: 0
-  # Existing autocomplete backends: "baidu", "brave", "dbpedia", "duckduckgo", "google", "yandex",
-  # "mwmbl", "seznam", "startpage", "stract", "swisscows", "qwant", "wikipedia" -
+  # Existing autocomplete backends: "360search", "baidu", "brave", "dbpedia", "duckduckgo", "google", "yandex",
+  # "mwmbl", "seznam", "sogou", "stract", "swisscows", "qwant", "wikipedia" -
   # leave blank to turn it off by default.
   autocomplete: ""
   # minimun characters to type before autocompleter starts
-  autocomplete_min: 1 
+  autocomplete_min: 4
   # backend for the favicon near URL in search results.
   # Available resolvers: "allesedv", "duckduckgo", "google", "yandex" - leave blank to turn it off by default.
   favicon_resolver: ""
@@ -97,7 +97,7 @@ server:
   # If your instance owns a /etc/searxng/settings.yml file, then set the following
   # values there.
 
-  secret_key: "f5b17fd8275e3cf935be6257c099f5cdc7d6dee7f6c36d0e724e4a6828aab676"  # Is overwritten by ${SEARXNG_SECRET}
+  secret_key: "4bc8ca03e92133bf3569a0eb3bf7ee92dc8eb90dc985d29d23159291e788c691"  # Is overwritten by ${SEARXNG_SECRET}
   # Proxy image results through SearXNG. Is overwritten by ${SEARXNG_IMAGE_PROXY}
   image_proxy: false
   # 1.0 and 1.1 are supported
@@ -150,14 +150,24 @@ ui:
   # URL formatting: pretty, full or host
   url_formatting: pretty
 
-# Lock arbitrary settings on the preferences page.  To find the ID of the user
-# setting you want to lock, check the ID of the form on the page "preferences".
+# Lock arbitrary settings on the preferences page.
 #
 # preferences:
 #   lock:
+#     - categories
 #     - language
 #     - autocomplete
+#     - favicon
+#     - safesearch
 #     - method
+#     - doi_resolver
+#     - locale
+#     - theme
+#     - results_on_new_tab
+#     - infinite_scroll
+#     - search_on_category_select
+#     - method
+#     - image_proxy
 #     - query_in_title
 
 # searx supports result proxification using an external service:
@@ -219,14 +229,15 @@ outgoing:
   #    - fe80::/126
 
 # External plugin configuration, for more details see
-#   https://docs.searxng.org/dev/plugins.html
+#   https://docs.searxng.org/admin/settings/settings_plugins.html
 #
 # plugins:
-#   - plugin1
-#   - plugin2
+#   - mypackage.mymodule.MyPlugin
+#   - mypackage.mymodule.MyOtherPlugin
 #   - ...
 
 # Comment or un-comment plugin to activate / deactivate by default.
+#   https://docs.searxng.org/admin/settings/settings_plugins.html
 #
 # enabled_plugins:
 #   # these plugins are enabled if nothing is configured ..
@@ -328,9 +339,24 @@ categories_as_tabs:
   social media:
 
 engines:
+  - name: 360search
+    engine: 360search
+    shortcut: 360so
+    disabled: true
+
+  - name: 360search videos
+    engine: 360search_videos
+    shortcut: 360sov
+    disabled: true
+
   - name: 9gag
     engine: 9gag
     shortcut: 9g
+    disabled: true
+
+  - name: acfun
+    engine: acfun
+    shortcut: acf
     disabled: true
 
   - name: adobe stock
@@ -477,6 +503,11 @@ engines:
     shortcut: bc
     categories: music
 
+  - name: baidu
+    engine: baidu
+    shortcut: baidu
+    disabled: true
+
   - name: wikipedia
     engine: wikipedia
     shortcut: wp
@@ -535,6 +566,11 @@ engines:
     shortcut: bt
     disabled: true
 
+  - name: openverse
+    engine: openverse
+    categories: images
+    shortcut: opv
+
   - name: media.ccc.de
     engine: ccc_media
     shortcut: c3tv
@@ -548,6 +584,24 @@ engines:
     shortcut: chef
     # to show premium or plus results too:
     # skip_premium: false
+
+  - name: chinaso news
+    chinaso_category: news
+    engine: chinaso
+    shortcut: chinaso
+    disabled: true
+
+  - name: chinaso images
+    chinaso_category: images
+    engine: chinaso
+    shortcut: chinasoi
+    disabled: true
+
+  - name: chinaso videos
+    chinaso_category: videos
+    engine: chinaso
+    shortcut: chinasov
+    disabled: true
 
   - name: cloudflareai
     engine: cloudflareai
@@ -658,6 +712,11 @@ engines:
     shortcut: destat
     disabled: true
 
+  - name: deviantart
+    engine: deviantart
+    shortcut: da
+    timeout: 3.0
+
   - name: ddg definitions
     engine: duckduckgo_definitions
     shortcut: ddd
@@ -728,6 +787,20 @@ engines:
   #   #custom_query_json: {"query":{"match_all": {}}}
   #   #show_metadata: false
   #   disabled: true
+
+  - name: wikidata
+    engine: wikidata
+    shortcut: wd
+    timeout: 3.0
+    weight: 2
+    # add "list" to the array to get results in the results list
+    display_type: ["infobox"]
+    tests: *tests_infobox
+    categories: [general]
+
+  - name: duckduckgo
+    engine: duckduckgo
+    shortcut: ddg
 
   - name: duckduckgo images
     engine: duckduckgo_extra
@@ -1006,6 +1079,24 @@ engines:
     disabled: true
     timeout: 6.0
 
+  - name: hoogle
+    engine: xpath
+    search_url: https://hoogle.haskell.org/?hoogle={query}
+    results_xpath: '//div[@class="result"]'
+    title_xpath: './/div[@class="ans"]//a'
+    url_xpath: './/div[@class="ans"]//a/@href'
+    content_xpath: './/div[@class="from"]'
+    page_size: 20
+    categories: [it, packages]
+    shortcut: ho
+    about:
+      website: https://hoogle.haskell.org/
+      wikidata_id: Q34010
+      official_api_documentation: https://hackage.haskell.org/api
+      use_official_api: false
+      require_api_key: false
+      results: JSON
+
   - name: imdb
     engine: imdb
     shortcut: imdb
@@ -1028,14 +1119,8 @@ engines:
     # Instanes will be selected randomly, see https://api.invidious.io/ for
     # instances that are stable (good uptime) and close to you.
     base_url:
-      - https://invidious.io.lol
-      - https://invidious.fdn.fr
-      - https://yt.artemislena.eu
-      - https://invidious.tiekoetter.com
-      - https://invidious.flokinet.to
-      - https://vid.puffyan.us
-      - https://invidious.privacydev.net
-      - https://inv.tux.pizza
+      - https://invidious.adminforge.de
+      - https://inv.nadeko.net
     shortcut: iv
     timeout: 3.0
     disabled: true
@@ -1043,6 +1128,11 @@ engines:
   - name: ipernity
     engine: ipernity
     shortcut: ip
+    disabled: true
+
+  - name: iqiyi
+    engine: iqiyi
+    shortcut: iq
     disabled: true
 
   - name: jisho
@@ -1110,12 +1200,16 @@ engines:
     categories: files
     timeout: 7.0
 
+  - name: library of congress
+    engine: loc
+    shortcut: loc
+    categories: images
+
   - name: libretranslate
     engine: libretranslate
     # https://github.com/LibreTranslate/LibreTranslate?tab=readme-ov-file#mirrors
     base_url:
-      - https://translate.terraprint.co
-      - https://trans.zillyhuhn.com
+      - https://libretranslate.com/translate
     # api_key: abc123
     shortcut: lt
     disabled: true
@@ -1312,6 +1406,13 @@ engines:
       require_api_key: false
       results: JSON
 
+  - name: openclipart
+    engine: openclipart
+    shortcut: ocl
+    inactive: true
+    disabled: true
+    timeout: 30
+
   - name: openlibrary
     engine: openlibrary
     shortcut: ol
@@ -1381,6 +1482,10 @@ engines:
     engine: photon
     shortcut: ph
 
+  - name: pinterest
+    engine: pinterest
+    shortcut: pin
+
   - name: piped
     engine: piped
     shortcut: ppd
@@ -1392,9 +1497,12 @@ engines:
     frontend_url: https://srv.piped.video
     # Instance will be selected randomly, for more see https://piped-instances.kavin.rocks/
     backend_url:
-      - https://pipedapi.kavin.rocks
-      - https://pipedapi-libre.kavin.rocks
       - https://pipedapi.adminforge.de
+      - https://pipedapi.nosebs.ru
+      - https://pipedapi.ducks.party
+      - https://pipedapi.reallyaweso.me
+      - https://api.piped.private.coffee
+      - https://pipedapi.darkness.services
 
   - name: piped.music
     engine: piped
@@ -1506,7 +1614,7 @@ engines:
       require_api_key: false
       results: HTML
 
-  - name: Public Domain Image Archive
+  - name: public domain image archive
     engine: public_domain_image_archive
     shortcut: pdia
 
@@ -1518,6 +1626,35 @@ engines:
   - name: pypi
     shortcut: pypi
     engine: pypi
+
+  - name: qwant
+    qwant_categ: web
+    engine: qwant
+    shortcut: qw
+    categories: [general, web]
+    additional_tests:
+      rosebud: *test_rosebud
+
+  - name: qwant news
+    qwant_categ: news
+    engine: qwant
+    shortcut: qwn
+    categories: news
+    network: qwant
+
+  - name: qwant images
+    qwant_categ: images
+    engine: qwant
+    shortcut: qwi
+    categories: [images, web]
+    network: qwant
+
+  - name: qwant videos
+    qwant_categ: videos
+    engine: qwant
+    shortcut: qwv
+    categories: [videos, web]
+    network: qwant
 
   # - name: library
   #   engine: recoll
@@ -1609,6 +1746,30 @@ engines:
     engine: sepiasearch
     shortcut: sep
 
+  - name: sogou
+    engine: sogou
+    shortcut: sogou
+    disabled: true
+
+  - name: sogou images
+    engine: sogou_images
+    shortcut: sogoui
+    disabled: true
+
+  - name: sogou videos
+    engine: sogou_videos
+    shortcut: sogouv
+    disabled: true
+
+  - name: sogou wechat
+    engine: sogou_wechat
+    shortcut: sogouw
+    disabled: true
+
+  - name: soundcloud
+    engine: soundcloud
+    shortcut: sc
+
   - name: stackoverflow
     engine: stackexchange
     shortcut: st
@@ -1695,10 +1856,22 @@ engines:
   - name: startpage
     engine: startpage
     shortcut: sp
-    timeout: 6.0
-    disabled: true
+    startpage_categ: web
+    categories: [general, web]
     additional_tests:
       rosebud: *test_rosebud
+
+  - name: startpage news
+    engine: startpage
+    startpage_categ: news
+    categories: [news, web]
+    shortcut: spn
+
+  - name: startpage images
+    engine: startpage
+    startpage_categ: images
+    categories: [images, web]
+    shortcut: spi
 
   - name: tokyotoshokan
     engine: tokyotoshokan
@@ -2297,6 +2470,46 @@ engines:
     engine: yummly
     shortcut: yum
     disabled: true
+
+  - name: brave
+    engine: brave
+    shortcut: br
+    time_range_support: true
+    paging: true
+    categories: [general, web]
+    brave_category: search
+    # brave_spellcheck: true
+
+  - name: brave.images
+    engine: brave
+    network: brave
+    shortcut: brimg
+    categories: [images, web]
+    brave_category: images
+
+  - name: brave.videos
+    engine: brave
+    network: brave
+    shortcut: brvid
+    categories: [videos, web]
+    brave_category: videos
+
+  - name: brave.news
+    engine: brave
+    network: brave
+    shortcut: brnews
+    categories: news
+    brave_category: news
+
+  # - name: brave.goggles
+  #   engine: brave
+  #   network: brave
+  #   shortcut: brgog
+  #   time_range_support: true
+  #   paging: true
+  #   categories: [general, web]
+  #   brave_category: goggles
+  #   Goggles: # required! This should be a URL ending in .goggle
 
   - name: lib.rs
     shortcut: lrs
